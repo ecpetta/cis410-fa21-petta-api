@@ -30,3 +30,25 @@ app.get("/customers", (req,res) => {
         res.status(500).send();
     })
 });
+
+app.get("/customers/:customer_id", (req,res) => {
+    let customer_id = req.params.customer_id;
+    //console.log(customer_id);
+    let myQuery = `SELECT *
+    FROM Customer
+    WHERE customer_id = ${customer_id}`
+
+    db.executeQuery(myQuery)
+    .then((result) => {
+        // console.log("result", result);
+        if(result[0]) {
+            res.send(result[0]);
+        } else {
+            res.status(404).send(`bad request`);
+        }
+    })
+    .catch((err) => {
+        console.log("Error in /customers/:customer_id", err);
+        res.status(500).send()
+    });
+});
