@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 
 const db = require("./dbConnectExec.js")
 const pettaConfig = require("./config.js");
+const auth = require("./middleware/authenticate")
 
 const app = express();
 app.use(express.json());
@@ -22,6 +23,32 @@ app.get("/", (req,res) => {
 
 // app.post();
 // app.put();
+
+app.post("/orders", auth, async (req,res) => {
+    try{
+        let order_id = req.body.order_id;
+        let order_contents = req.body.order_contents;
+        let order_total = req.body.order_total;
+        let order_payment_method = req.body.order_payment_method
+
+        if(!order_id || !order_contents || !order_total || !Number.isInteger(order_total) || !order_payment_method){return res.status(400).send("bad request")};
+
+        order_contents = order_contents.replace("'","''");
+
+        // console.log("order contents", order_contents);
+        // console.log("here is the contact", req.contact);
+
+        res.send("here is the response");
+    }
+    catch(err){
+        console.log("error in POST /restaurants", err);
+        res.status(500).send();
+    }
+})
+
+app.get("/customers/me", auth, (req,res)=>{
+    res.send(req.customer)
+})
 
 app.post("/customers/login", async (req,res) => {
     // console.log('/customers/login called', req.body);
@@ -138,9 +165,9 @@ app.post("/customers", async(req, res) => {
 
 })
 
-app.get("/orders", (req,res) => {
+app.get("/restaurants", (req,res) => {
     //get data from database
-    db.executeQuery(`SELECT * FROM [dbo].[Order]`)
+    db.executeQuery(`SELECT * FROM [dbo].[Restaurant]`)
     .then((theResults) => { 
         res.status(200).send(theResults);
     })
@@ -150,12 +177,12 @@ app.get("/orders", (req,res) => {
     })
 });
 
-app.get("/orders/:order_id", (req,res) => {
+app.get("/restaurants/:restaurant_id", (req,res) => {
     let order_id = req.params.order_id;
     //console.log(order_id);
     let myQuery = `SELECT *
-    FROM [dbo].[Order]
-    WHERE order_id = ${order_id}`
+    FROM [dbo].[Restaurant]
+    WHERE restaurant_id = ${restaurant_id}`
 
     db.executeQuery(myQuery)
     .then((result) => {
@@ -167,7 +194,7 @@ app.get("/orders/:order_id", (req,res) => {
         }
     })
     .catch((err) => {
-        console.log("Error in /orders/:order_id", err);
+        console.log("Error in /restaurants/:restaurant_id", err);
         res.status(500).send()
     });
 });
