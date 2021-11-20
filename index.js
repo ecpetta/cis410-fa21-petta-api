@@ -29,6 +29,21 @@ app.get("/", (req,res) => {
 // app.post();
 // app.put();
 
+app.post("/customers/logout", auth, (req,res) => {
+    let query = 
+    `UPDATE Customer 
+    SET token = NULL 
+    WHERE customer_id = ${req.customer.customer_id}`;
+
+    db.executeQuery(query)
+    .then(()=>{res.status(200).send()})
+    .catch((err)=>{
+        console.log("error in POST /customers/logout", err);
+        res.status(500).send()
+    })
+})
+
+
 app.post("/orders", auth, async (req,res) => {
     try{
         let order_id = req.body.order_id;
