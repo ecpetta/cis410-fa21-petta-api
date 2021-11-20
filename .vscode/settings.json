@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "/subscriptions/7be67bcf-0f1f-44ab-8802-f2a961633ba7/resourceGroups/appsvc_linux_centralus/providers/Microsoft.Web/sites/cis410-fa21-petta-api",
+    "appService.deploySubpath": "."
+}
