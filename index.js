@@ -1,7 +1,9 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 const db = require("./dbConnectExec.js")
+const pettaConfig = require("./config.js");
 
 const app = express();
 app.use(express.json());
@@ -20,6 +22,79 @@ app.get("/", (req,res) => {
 
 // app.post();
 // app.put();
+
+app.post("/customers/login", async (req,res) => {
+    // console.log('/customers/login called', req.body);
+
+    //1. Data validation
+    let email = req.body.email;
+    let password = req.body.password;
+
+    if(!email || !password) {
+        return res.status(400).send("Bad request")
+    }
+
+    //2. Check that user exists in database
+    let query = 
+    `SELECT *
+    FROM Customer
+    WHERE customer_email = '${email}'`
+
+    let result;
+    try {
+        result = await db.executeQuery(query);
+    } catch (myError) {
+        console.log("error in /customers/login", myError);
+        return res.status(500).send();
+    }
+
+
+    // console.log("result", result);
+
+    if(!result[0]) {
+        return res.status(401).send("Invalid user credentials");
+    }
+
+    //3. Check password
+
+    let user = result[0];
+
+    if (!bcrypt.compareSync(password, user.password)) {
+        console.log("Invalid password");
+        return res.status(401).send("Invalid user credentials");
+    }
+
+    //4. Generate token
+
+    let token = jwt.sign({pk:user.customer_id},pettaConfig.JWT,{expiresIn: "60 minutes"});
+    // console.log("token", token);
+
+    //5. Save token in database and send response
+
+    let setTokenQuery = 
+    `UPDATE Customer
+    SET token = '${token}'
+    WHERE customer_id = ${user.customer_id}`
+
+    try{
+        await db.executeQuery(setTokenQuery)
+
+        res.status(200).send({
+            token: token,
+            user:{
+                nameFirst: user.first_name,
+                nameLast: user.last_name,
+                email: user.customer_email,
+                customer_id: user.customer_id
+            }
+        })
+    } 
+    catch(myError){
+        console.log("error in setting user token", myError);
+        res.status(500).send()
+    }
+
+});
 
 app.post("/customers", async(req, res) => {
     // res.send("/contacts called");
